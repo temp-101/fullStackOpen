@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import Person from './components/person'
+import Persons from './components/person'
 import Filter from './components/fliter'
 import PersonForm from './components/personForm'
 
@@ -64,7 +64,7 @@ const App = () => {
       handleNewName={handleNewName} handleNewNumber={handleNewNumber} />
       <h2>Numbers</h2>
       {personsToShow.map(person =>
-        <Person key={person.name} person={person} />
+        <Persons key={person.name} person={person} />
         )}
     </div>
   )
