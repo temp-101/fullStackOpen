@@ -24,6 +24,7 @@ const App = (props) => {
     const newVotes = [...votes];
     newVotes[selected] += 1;
     setVotes(newVotes);
+    
   }
 
   return (
