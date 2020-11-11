@@ -48,7 +48,6 @@ const App = () => {
 	};
 
 	const handleSearchChange = (event) => {
-		console.log(newSearch);
 		setNewSearch(event.target.value);
 	};
 
