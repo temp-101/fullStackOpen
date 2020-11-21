@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import Persons from "./components/person";
+import Notification from "./components/notification";
 import Filter from "./components/fliter";
 import PersonForm from "./components/personForm";
 import personService from "./services/listOfPersons";
+import "./index.css";
 
 const App = () => {
 	const [persons, setPersons] = useState([]);
 	const [newName, setNewName] = useState("");
 	const [newNumber, setNewNumber] = useState("");
 	const [newSearch, setNewSearch] = useState("");
+	const [errorMessage, setErrorMessage] = useState(null);
+	const [code, setCode] = useState(false);
 
 	const getPersons = () => {
 		personService.getAll().then((initialPerson) => {
@@ -19,6 +23,14 @@ const App = () => {
 	useEffect(() => {
 		getPersons();
 	}, []);
+
+	const Notify = (message, c) => {
+		setCode(c);
+		setErrorMessage(message);
+		setTimeout(() => {
+			setErrorMessage(null);
+		}, 5000);
+	};
 
 	const addPerson = (event) => {
 		event.preventDefault();
@@ -39,15 +51,25 @@ const App = () => {
 			) {
 				const person = persons.find((p) => p.name === newPerson.name);
 				const updatedPerson = { ...person, number: newPerson.number };
-				personService.update(person.id, updatedPerson).then((response) => {
-					setPersons(persons.map((p) => (p.id !== person.id ? p : response)));
-				});
+				personService
+					.update(person.id, updatedPerson)
+					.then((response) => {
+						setPersons(persons.map((p) => (p.id !== person.id ? p : response)));
+					})
+					.catch(
+						Notify(
+							`Information of ${newPerson.name} has already been removed from server`,
+							true
+						),
+						getPersons()
+					);
 			}
 		} else {
 			personService.create(newPerson).then((returnedPerson) => {
 				setPersons(persons.concat(returnedPerson));
 				setNewName("");
 				setNewNumber("");
+				Notify(`Added ${returnedPerson.name}`, false);
 			});
 		}
 	};
@@ -81,6 +103,7 @@ const App = () => {
 	return (
 		<div>
 			<h2>Phonebook</h2>
+			<Notification message={errorMessage} code={code} />
 			<Filter newSearch={newSearch} handleSearchChange={handleSearchChange} />
 			<h2>add a new</h2>
 			<PersonForm
