@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Persons from "./components/person";
 import Filter from "./components/fliter";
 import PersonForm from "./components/personForm";
+import personService from "./services/listOfPersons";
 
 const App = () => {
 	const [persons, setPersons] = useState([]);
@@ -10,14 +10,15 @@ const App = () => {
 	const [newNumber, setNewNumber] = useState("");
 	const [newSearch, setNewSearch] = useState("");
 
-	useEffect(() => {
-		console.log("effect");
-		axios.get("http://localhost:3001/persons").then((response) => {
-			console.log("promise fulfilled");
-			setPersons(response.data);
+	const getPersons = () => {
+		personService.getAll().then((initialPerson) => {
+			setPersons(initialPerson);
 		});
+	};
+
+	useEffect(() => {
+		getPersons();
 	}, []);
-	console.log("render", persons.length, "notes");
 
 	const addPerson = (event) => {
 		event.preventDefault();
@@ -31,11 +32,31 @@ const App = () => {
 		}
 
 		if (persons.find(duplicate)) {
-			alert(`${newName} is already added to phonebook`);
+			if (
+				window.confirm(
+					`${newName} is already added to phonebook, replace the old number with a new one?`
+				)
+			) {
+				const person = persons.find((p) => p.name === newPerson.name);
+				const updatedPerson = { ...person, number: newPerson.number };
+				personService.update(person.id, updatedPerson).then((response) => {
+					setPersons(persons.map((p) => (p.id !== person.id ? p : response)));
+				});
+			}
 		} else {
-			setPersons(persons.concat(newPerson));
-			setNewName("");
-			setNewNumber("");
+			personService.create(newPerson).then((returnedPerson) => {
+				setPersons(persons.concat(returnedPerson));
+				setNewName("");
+				setNewNumber("");
+			});
+		}
+	};
+
+	const deletePerson = (id) => {
+		if (window.confirm("Are you sure you want to delete this contact?")) {
+			personService.deletion(id).then(() => {
+				getPersons();
+			});
 		}
 	};
 
@@ -71,7 +92,11 @@ const App = () => {
 			/>
 			<h2>Numbers</h2>
 			{personsToShow.map((person) => (
-				<Persons key={person.name} person={person} />
+				<Persons
+					key={person.name}
+					person={person}
+					deletePerson={deletePerson}
+				/>
 			))}
 		</div>
 	);
